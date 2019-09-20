@@ -24,7 +24,7 @@ stages:
       inputs:
         command: 'restore'
         feedsToUse: 'select'
-        vstsFeed: '8ed18c8e-4f19-4994-be32-0a1f0893af0f'
+        vstsFeed: '$(TargetFeed)'
     - script: dotnet build --configuration $(buildConfiguration) --no-restore
       displayName: 'dotnet build $(buildConfiguration)'
     - task: DotNetCoreCLI@2
