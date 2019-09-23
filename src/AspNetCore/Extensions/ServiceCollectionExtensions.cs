@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MultiTenancyServer;
 using MultiTenancyServer.Configuration.DependencyInjection;
 using MultiTenancyServer.Http;
+using MultiTenancyServer.Models;
 using MultiTenancyServer.Options;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -22,9 +23,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TTenant">The type representing a Tenant in the system.</typeparam>
         /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
         /// <param name="services">The services available in the application.</param>
-        /// <returns>An <see cref="TenancyBuilder"/> for creating and configuring the multi-tenancy system.</returns>
+        /// <returns>An <see cref="TenancyBuilder{TTenant, TKey}"/> for creating and configuring the multi-tenancy system.</returns>
         public static TenancyBuilder<TTenant, TKey> AddMultiTenancy<TTenant, TKey>(this IServiceCollection services)
-            where TTenant : class
+            where TTenant : ITenanted<TKey>
             where TKey : IEquatable<TKey>
             => services.AddMultiTenancy<TTenant, TKey>(o => { });
 
@@ -35,13 +36,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
         /// <param name="services">The services available in the application.</param>
         /// <param name="setup">An action to configure the <see cref="TenancyOptions"/>.</param>
-        /// <returns>An <see cref="TenancyBuilder"/> for creating and configuring the multi-tenancy system.</returns>
+        /// <returns>An <see cref="TenancyBuilder{TTenant, TKey}"/> for creating and configuring the multi-tenancy system.</returns>
         public static TenancyBuilder<TTenant, TKey> AddMultiTenancy<TTenant, TKey>(this IServiceCollection services, Action<TenancyOptions> setup)
-            where TTenant : class
+            where TTenant : ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.TryAddScoped<ITenancyProvider<TTenant>, HttpTenancyProvider<TTenant>>();
+            services.TryAddScoped<ITenancyProvider<TTenant, TKey>, HttpTenancyProvider<TTenant, TKey>>();
             return services.AddMultiTenancyCore<TTenant, TKey>(setup);
         }
     }

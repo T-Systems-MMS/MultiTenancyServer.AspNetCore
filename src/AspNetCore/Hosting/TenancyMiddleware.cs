@@ -1,19 +1,23 @@
 ﻿// Copyright (c) Kris Penner. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System;
 using System.Threading.Tasks;
 using KodeAid;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
+using MultiTenancyServer.Models;
 using MultiTenancyServer.Options;
 using MultiTenancyServer.Stores;
 
 namespace MultiTenancyServer.Hosting
 {
-    internal class TenancyMiddleware<TTenant> where TTenant : class
+    internal class TenancyMiddleware<TTenant, TKey>
+        where TTenant : ITenanted<TKey>
+        where TKey : IEquatable<TKey>
     {
-        public TenancyMiddleware(RequestDelegate next, TenancyOptions options, ILogger<TenancyMiddleware<TTenant>> logger)
+        public TenancyMiddleware(RequestDelegate next, TenancyOptions options, ILogger<TenancyMiddleware<TTenant, TKey>> logger)
         {
             ArgCheck.NotNull(nameof(next), next);
             ArgCheck.NotNull(nameof(options), options);
@@ -27,7 +31,8 @@ namespace MultiTenancyServer.Hosting
         private readonly TenancyOptions _options;
         private readonly ILogger _logger;
 
-        public async Task InvokeAsync(HttpContext httpContext, ITenancyContext<TTenant> tenancyContext, ITenancyProvider<TTenant> tenancyProvider, ITenantStore<TTenant> tenantStore)
+        public async Task InvokeAsync(
+            HttpContext httpContext, ITenancyContext<TTenant, TKey> tenancyContext, ITenancyProvider<TTenant, TKey> tenancyProvider, ITenantStore<TTenant, TKey> tenantStore)
         {
             var tenant = await tenancyProvider.GetCurrentTenantAsync(httpContext.RequestAborted).ConfigureAwait(false);
 

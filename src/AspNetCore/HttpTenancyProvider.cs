@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Kris Penner. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using MultiTenancyServer.Http.Parsers;
+using MultiTenancyServer.Models;
 using MultiTenancyServer.Stores;
 
 namespace MultiTenancyServer.Http
@@ -17,10 +19,12 @@ namespace MultiTenancyServer.Http
     /// <summary>
     /// Tenancy provider for HTTP requests.
     /// </summary>
-    public class HttpTenancyProvider<TTenant> : ITenancyProvider<TTenant> where TTenant : class
+    public class HttpTenancyProvider<TTenant, TKey> : ITenancyProvider<TTenant, TKey>
+        where TTenant : ITenanted<TKey>
+        where TKey : IEquatable<TKey>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="HttpTenancyProvider"/> class.
+        /// Initializes a new instance of the <see cref="HttpTenancyProvider{TTenant, TKey}"/> class.
         /// </summary>
         /// <param name="httpContextAccessor">Context accessor of the current HTTP request.</param>
         /// <param name="requestParsers">The parsers.</param>
@@ -30,9 +34,9 @@ namespace MultiTenancyServer.Http
         public HttpTenancyProvider(
             IHttpContextAccessor httpContextAccessor,
             IEnumerable<IRequestParser> requestParsers,
-            ITenantStore<TTenant> tenantStore,
+            ITenantStore<TTenant, TKey> tenantStore,
             ILookupNormalizer lookupNormalizer,
-            ILogger<HttpTenancyProvider<TTenant>> logger)
+            ILogger<HttpTenancyProvider<TTenant, TKey>> logger)
         {
             ArgCheck.NotNull(nameof(httpContextAccessor), httpContextAccessor);
             ArgCheck.NotNull(nameof(requestParsers), requestParsers);
@@ -49,7 +53,7 @@ namespace MultiTenancyServer.Http
 
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IEnumerable<IRequestParser> _requestParsers;
-        private readonly ITenantStore<TTenant> _tenantStore;
+        private readonly ITenantStore<TTenant, TKey> _tenantStore;
         private readonly ILookupNormalizer _lookupNormalizer;
         private readonly ILogger _logger;
         private bool _tenantLoaded;
