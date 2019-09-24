@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
 using MultiTenancyServer.Models;
-using MultiTenancyServer.Options;
 using MultiTenancyServer.Stores;
 
 namespace MultiTenancyServer.Hosting
@@ -17,18 +16,15 @@ namespace MultiTenancyServer.Hosting
         where TTenant : ITenanted<TKey>
         where TKey : IEquatable<TKey>
     {
-        public TenancyMiddleware(RequestDelegate next, TenancyOptions options, ILogger<TenancyMiddleware<TTenant, TKey>> logger)
+        public TenancyMiddleware(RequestDelegate next, ILogger<TenancyMiddleware<TTenant, TKey>> logger)
         {
             ArgCheck.NotNull(nameof(next), next);
-            ArgCheck.NotNull(nameof(options), options);
             ArgCheck.NotNull(nameof(logger), logger);
             _next = next;
-            _options = options;
             _logger = logger;
         }
 
         private readonly RequestDelegate _next;
-        private readonly TenancyOptions _options;
         private readonly ILogger _logger;
 
         public async Task InvokeAsync(
