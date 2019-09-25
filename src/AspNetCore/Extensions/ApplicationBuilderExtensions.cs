@@ -6,6 +6,7 @@ using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MultiTenancyServer.Hosting;
+using MultiTenancyServer.Models;
 using MultiTenancyServer.Options;
 using MultiTenancyServer.Stores;
 
@@ -21,14 +22,18 @@ namespace Microsoft.AspNetCore.Builder
         /// </summary>
         /// <param name="app">The application.</param>
         /// <returns>The builder.</returns>
-        public static IApplicationBuilder UseMultiTenancy<TTenant>(this IApplicationBuilder app) where TTenant : class
+        public static IApplicationBuilder UseMultiTenancy<TTenant, TKey>(this IApplicationBuilder app)
+            where TTenant : class, ITenanted<TKey>
+            where TKey : IEquatable<TKey>
         {
             return app
-              .Validate<TTenant>()
-              .UseMiddleware<TenancyMiddleware<TTenant>>();
+              .Validate<TTenant, TKey>()
+              .UseMiddleware<TenancyMiddleware<TTenant, TKey>>();
         }
 
-        internal static IApplicationBuilder Validate<TTenant>(this IApplicationBuilder app) where TTenant : class
+        internal static IApplicationBuilder Validate<TTenant, TKey>(this IApplicationBuilder app)
+            where TTenant : class, ITenanted<TKey>
+            where TKey : IEquatable<TKey>
         {
             var loggerFactory = app.ApplicationServices.GetService(typeof(ILoggerFactory)) as ILoggerFactory;
             if (loggerFactory == null)
@@ -42,7 +47,7 @@ namespace Microsoft.AspNetCore.Builder
             {
                 var serviceProvider = scope.ServiceProvider;
 
-                TestService(serviceProvider, typeof(ITenantStore<TTenant>), logger, 
+                TestService(serviceProvider, typeof(ITenantStore<TTenant, TKey>), logger, 
                     "No storage mechanism for tenants specified. Use the 'AddInMemoryStore' extension method to register a development version.");
 
                 var options = serviceProvider.GetRequiredService<TenancyOptions>();

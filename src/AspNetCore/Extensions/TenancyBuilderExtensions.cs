@@ -8,6 +8,7 @@ using KodeAid;
 using Microsoft.AspNetCore.Http;
 using MultiTenancyServer.Configuration.DependencyInjection;
 using MultiTenancyServer.Http.Parsers;
+using MultiTenancyServer.Models;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -20,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
         /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
         public static TenancyBuilder<TTenant, TKey> AddRequestParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<IServiceProvider, IRequestParser> parserFactory)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -36,7 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="builder">Builder to add the <see cref="DomainParser"/> to.</param>
         /// <returns><paramref name="builder"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddDomainParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -53,7 +54,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="headerName">The HTTP header name which will contain the tenant's canonical name of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddHeaderParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string headerName)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -71,7 +72,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="parentHostSuffix">The parent hostname suffix which will contain the tenant's canonical name as its only sub-domain hostname of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddSubdomainParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string parentHostSuffix)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -91,7 +92,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="hostPattern">A regular expression to retreive the tenant canonical name from the full hostname (domain) of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddHostnameParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string hostPattern)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -109,7 +110,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="parentPathPrefix">The parent path prefix which will contain the tenant's canonical name as its child path segment of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddChildPathParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string parentPathPrefix)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -127,7 +128,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="pathPattern">A regular expression to retreive the tenant canonical name from the path of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddPathParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string pathPattern)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -145,7 +146,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="queryName">The query string parameter name of the tenant canonical name.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddQueryParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string queryName)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -164,7 +165,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="claimType">Claim type that contains the tenant canonical name as its value.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddClaimParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string claimType)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
@@ -182,7 +183,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="parser">Func that returns the tenant's canonical name from the current request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddCustomParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<HttpContext, string> parser)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             return builder.AddCustomParser(httpContext => Task.FromResult(parser(httpContext)));
@@ -198,7 +199,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="parser">Async func that returns the tenant's canonical name from the current request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static TenancyBuilder<TTenant, TKey> AddCustomParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<HttpContext, Task<string>> parser)
-            where TTenant : class
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
