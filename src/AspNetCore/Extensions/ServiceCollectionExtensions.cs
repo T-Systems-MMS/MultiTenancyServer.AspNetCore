@@ -5,10 +5,12 @@ using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MultiTenancyServer;
+using MultiTenancyServer.AspNetCore;
 using MultiTenancyServer.Configuration.DependencyInjection;
 using MultiTenancyServer.Http;
 using MultiTenancyServer.Models;
 using MultiTenancyServer.Options;
+using MultiTenancyServer.Services;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,7 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The services available in the application.</param>
         /// <returns>An <see cref="TenancyBuilder{TTenant, TKey}"/> for creating and configuring the multi-tenancy system.</returns>
         public static TenancyBuilder<TTenant, TKey> AddMultiTenancy<TTenant, TKey>(this IServiceCollection services)
-            where TTenant : ITenanted<TKey>
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
             => services.AddMultiTenancy<TTenant, TKey>(o => { });
 
@@ -38,10 +40,11 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="setup">An action to configure the <see cref="TenancyOptions"/>.</param>
         /// <returns>An <see cref="TenancyBuilder{TTenant, TKey}"/> for creating and configuring the multi-tenancy system.</returns>
         public static TenancyBuilder<TTenant, TKey> AddMultiTenancy<TTenant, TKey>(this IServiceCollection services, Action<TenancyOptions> setup)
-            where TTenant : ITenanted<TKey>
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.TryAddSingleton<ITenancyContextAccessor<TTenant, TKey>, TenancyContextAccessor<TTenant, TKey>>();
             services.TryAddScoped<ITenancyProvider<TTenant, TKey>, HttpTenancyProvider<TTenant, TKey>>();
             return services.AddMultiTenancyCore<TTenant, TKey>(setup);
         }

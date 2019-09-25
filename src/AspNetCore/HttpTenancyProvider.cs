@@ -19,10 +19,20 @@ namespace MultiTenancyServer.Http
     /// <summary>
     /// Tenancy provider for HTTP requests.
     /// </summary>
+    /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+    /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
     public class HttpTenancyProvider<TTenant, TKey> : ITenancyProvider<TTenant, TKey>
-        where TTenant : ITenanted<TKey>
+        where TTenant : class, ITenanted<TKey>
         where TKey : IEquatable<TKey>
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IEnumerable<IRequestParser> _requestParsers;
+        private readonly ITenantStore<TTenant, TKey> _tenantStore;
+        private readonly ILookupNormalizer _lookupNormalizer;
+        private readonly ILogger _logger;
+        private bool _tenantLoaded;
+        private TTenant _tenant;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpTenancyProvider{TTenant, TKey}"/> class.
         /// </summary>
@@ -50,14 +60,6 @@ namespace MultiTenancyServer.Http
             _lookupNormalizer = lookupNormalizer;
             _logger = logger;
         }
-
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IEnumerable<IRequestParser> _requestParsers;
-        private readonly ITenantStore<TTenant, TKey> _tenantStore;
-        private readonly ILookupNormalizer _lookupNormalizer;
-        private readonly ILogger _logger;
-        private bool _tenantLoaded;
-        private TTenant _tenant;
 
         /// <summary>
         /// Gets the tenant from the current HTTP request asynchronously.

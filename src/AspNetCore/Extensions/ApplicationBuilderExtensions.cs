@@ -23,7 +23,7 @@ namespace Microsoft.AspNetCore.Builder
         /// <param name="app">The application.</param>
         /// <returns>The builder.</returns>
         public static IApplicationBuilder UseMultiTenancy<TTenant, TKey>(this IApplicationBuilder app)
-            where TTenant : ITenanted<TKey>
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             return app
@@ -32,7 +32,7 @@ namespace Microsoft.AspNetCore.Builder
         }
 
         internal static IApplicationBuilder Validate<TTenant, TKey>(this IApplicationBuilder app)
-            where TTenant : ITenanted<TKey>
+            where TTenant : class, ITenanted<TKey>
             where TKey : IEquatable<TKey>
         {
             var loggerFactory = app.ApplicationServices.GetService(typeof(ILoggerFactory)) as ILoggerFactory;

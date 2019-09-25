@@ -7,13 +7,14 @@ using KodeAid;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Logging;
+using MultiTenancyServer.AspNetCore;
 using MultiTenancyServer.Models;
 using MultiTenancyServer.Stores;
 
 namespace MultiTenancyServer.Hosting
 {
     internal class TenancyMiddleware<TTenant, TKey>
-        where TTenant : ITenanted<TKey>
+        where TTenant : class, ITenanted<TKey>
         where TKey : IEquatable<TKey>
     {
         public TenancyMiddleware(RequestDelegate next, ILogger<TenancyMiddleware<TTenant, TKey>> logger)
@@ -47,8 +48,21 @@ namespace MultiTenancyServer.Hosting
                     _logger.LogInformation("No tenant was found for request {RequestUrl}.", httpContext.Request.GetDisplayUrl());
                 }
             }
+            
+            if (!httpContext.Items.ContainsKey(GlobalConst.HttpContextTenancyContext))
+            {
+                tenancyContext.Tenant = tenant;
+                httpContext.Items.Add(GlobalConst.HttpContextTenancyContext, tenancyContext);
+            }
+            else
+            {
+                httpContext.Items.TryGetValue(GlobalConst.HttpContextTenancyContext, out var currentTenancyContext);
+                if (currentTenancyContext is ITenancyContext<TTenant, TKey> iTenancyContext)
+                {
+                    iTenancyContext.Tenant = tenant;
+                }
+            }
 
-            tenancyContext.Tenant = tenant;
             await _next(httpContext).ConfigureAwait(false);
         }
     }
